@@ -1,7 +1,10 @@
 import requests
 import time
 import json
+import threading
+from flask import Flask
 
+# ---- Discord config
 with open("config.json") as f:
     config = json.load(f)
 
@@ -13,6 +16,7 @@ CHECK_INTERVAL = config["check_interval"]
 
 already_sent = set()
 
+# ---- Bot logic
 def send_to_discord(title, url, image):
     data = {
         "embeds": [{
@@ -42,6 +46,19 @@ def check_vinted():
     except Exception as e:
         print(f"Błąd: {e}")
 
-while True:
-    check_vinted()
-    time.sleep(CHECK_INTERVAL)
+def run_bot():
+    while True:
+        check_vinted()
+        time.sleep(CHECK_INTERVAL)
+
+# ---- Dummy Flask app to keep Render alive
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "iPhone Bot is running!"
+
+if __name__ == "__main__":
+    threading.Thread(target=run_bot).start()
+    app.run(host="0.0.0.0", port=10000)
+
